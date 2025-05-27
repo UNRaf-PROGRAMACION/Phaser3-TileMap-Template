@@ -3,8 +3,8 @@ import Game from "./scenes/Game.js";
 // Create a new Phaser config object
 const config = {
   type: Phaser.AUTO,
-  width: 720,
-  height: 720,
+  width: 800,
+  height: 600,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -13,14 +13,14 @@ const config = {
       height: 600,
     },
     max: {
-      width: 1600,
-      height: 1200,
+      width: 2160,
+      height: 1620,
     },
   },
   physics: {
     default: "arcade",
     arcade: {
-      gravity: { y: 200 },
+      gravity: { y: 0 }, // Mantén la gravedad en cero para un juego top-down
       debug: true,
     },
   },
