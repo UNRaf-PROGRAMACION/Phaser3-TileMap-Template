@@ -64,11 +64,16 @@ export default class Game extends Phaser.Scene {
     this.physics.add.collider(this.player, platformLayer);
 
     this.stars = this.physics.add.group();
+    this.targets = this.physics.add.group();
+
     objectsLayer.objects.forEach((objData) => {
-      const { x = 0, y = 0, type } = objData;
+      const { x = 0, y = 0, type, name } = objData;
       if (type === "star") {
         const star = this.stars.create(x, y, "star");
-        star.body.setCollideWorldBounds(true);
+      }
+      if (name === "target") {
+        const target = this.targets.create(x, y, "star");
+        target.setTint(0xff0000);
       }
     });
 
@@ -77,6 +82,15 @@ export default class Game extends Phaser.Scene {
       this.player,
       this.stars,
       this.collectStar,
+      null,
+      this
+    );
+
+    //colison con el target
+    this.physics.add.overlap(
+      this.player,
+      this.targets,
+      this.handleTargetCollision,
       null,
       this
     );
@@ -122,11 +136,40 @@ export default class Game extends Phaser.Scene {
       console.log("Phaser.Input.Keyboard.JustDown(this.keyR)");
       this.scene.restart();
     }
+
+    // move score text to the top right corner
+
+    this.scoreText.setPosition(
+      this.cameras.main.worldView.x +
+        this.cameras.main.worldView.width -
+        16 -
+        this.scoreText.width,
+      this.cameras.main.worldView.y + 16
+    );
   }
 
   collectStar(player, star) {
     star.disableBody(true, true);
     this.score += 10;
     this.scoreText.setText(`Score: ${this.score}`);
+  }
+
+  handleTargetCollision(player, target) {
+    console.log("Collision with target!");
+
+    // Mostrar el texto de victoria en el centro de la vista actual de la cámara
+    this.add
+      .text(
+        this.cameras.main.worldView.centerX,
+        this.cameras.main.worldView.centerY,
+        "¡Victoria!",
+        {
+          fontSize: "64px",
+          fill: "#fff",
+        }
+      )
+      .setOrigin(0.5, 0.5);
+
+    this.player.setTint(0x00ff00); // Cambiar el color del jugador para indicar victoria
   }
 }
