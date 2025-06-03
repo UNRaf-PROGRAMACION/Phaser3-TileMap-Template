@@ -13,6 +13,7 @@ export default class Game extends Phaser.Scene {
     this.load.tilemapTiledJSON("map", "public/assets/tilemap/big_map.json");
     this.load.image("tileset", "public/assets/tilemap_packed.png");
     this.load.image("star", "public/assets/star.png");
+    this.load.image("bomb", "public/assets/bomb.png");
 
     this.load.spritesheet("dude", "./public/assets/dude.png", {
       frameWidth: 32,
@@ -66,6 +67,8 @@ export default class Game extends Phaser.Scene {
     this.stars = this.physics.add.group();
     this.targets = this.physics.add.group();
 
+    console.log("objectsLayer", objectsLayer.objects);
+
     objectsLayer.objects.forEach((objData) => {
       const { x = 0, y = 0, type, name } = objData;
       if (type === "star") {
@@ -75,7 +78,102 @@ export default class Game extends Phaser.Scene {
         const target = this.targets.create(x, y, "star");
         target.setTint(0xff0000);
       }
+
+      if (name === "enemy1") {
+        // Create an enemy that moves horizontally
+        const enemy = this.physics.add.sprite(x, y, "bomb");
+        enemy.setBounce(1);
+        enemy.setVelocity(100, 0);
+        this.physics.add.collider(enemy, platformLayer);
+      }
+
+      if (name === "enemy2") {
+        // Create an enemy that moves with linear tweens
+        const enemy = this.physics.add.sprite(x, y, "bomb");
+        enemy.setBounce(1);
+        enemy.setVelocity(0, 1000);
+        this.physics.add.collider(enemy, platformLayer);
+        this.tweens.add({
+          targets: enemy,
+          y: enemy.y + 300,
+          duration: 2000,
+          ease: "Power4", // options> "Linear", "Sine.easeInOut", "Power2", "Power3", "Power4"
+          yoyo: true,
+          repeat: -1,
+        });
+      }
+
+      if (name === "enemy3") {
+        // Create an enemy that moves with sin tweens
+        const enemy = this.physics.add.sprite(x, y, "bomb");
+        enemy.setBounce(1);
+        enemy.setVelocity(0, Phaser.Math.Between(-200, 200));
+        this.physics.add.collider(enemy, platformLayer);
+        // Movimiento en onda senoidal hacia adelante
+        this.tweens.addCounter({
+          from: 0,
+          to: Math.PI * 2,
+          duration: 5000,
+          repeat: -1,
+          onUpdate: (tween) => {
+            const t = tween.getValue();
+            // Movimiento hacia la derecha (x) y onda senoidal en y
+            enemy.x = x + t * 50; // avance horizontal
+            enemy.y = y + Math.sin(t) * 25; // onda vertical
+          },
+        });
+      }
+
+      if (name === "enemy4") {
+        // Create an enemy that moves with circular tweens
+        const enemy = this.physics.add.sprite(x, y, "bomb");
+        enemy.setBounce(1);
+        enemy.setVelocity(0, Phaser.Math.Between(-200, 200));
+        this.physics.add.collider(enemy, platformLayer);
+
+        this.tweens.addCounter({
+          from: 0,
+          to: Math.PI * 2,
+          duration: 5000,
+          repeat: -1,
+          onUpdate: (tween) => {
+            const t = tween.getValue();
+            // Movimiento circular
+            enemy.x = x + Math.cos(t) * 50; // radio de 50
+            enemy.y = y + Math.sin(t) * 50; // radio de 50
+          },
+        });
+      }
     });
+
+    const enemy_start = objectsLayer.objects.find(
+      (obj) => obj.name === "enemy_start"
+    );
+    const enemy_finish = objectsLayer.objects.find(
+      (obj) => obj.name === "enemy_finish"
+    );
+
+    if (enemy_start && enemy_finish) {
+      // Create an enemy that moves between two points
+      const enemy = this.physics.add.sprite(
+        enemy_start.x,
+        enemy_start.y,
+        "bomb"
+      );
+      enemy.setBounce(1);
+      enemy.setVelocityX(100); // Velocidad inicial hacia la derecha
+      this.physics.add.collider(enemy, platformLayer);
+
+      this.tweens.add({
+        targets: enemy,
+        x: enemy_finish.x,
+        y: enemy_finish.y,
+        duration: 2000,
+        ease: "Power2",
+        yoyo: false,
+        repeat: 3,
+      });
+    }
 
     this.physics.add.collider(this.stars, platformLayer);
     this.physics.add.overlap(
